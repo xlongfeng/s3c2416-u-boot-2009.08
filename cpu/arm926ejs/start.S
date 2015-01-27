@@ -10,6 +10,7 @@
  *  Copyright (c) 2002	Gary Jennejohn <garyj@denx.de>
  *  Copyright (c) 2003	Richard Woodruff <r-woodruff2@ti.com>
  *  Copyright (c) 2003	Kshitij <kshitij@ti.com>
+ *  Copyright (c) 2015	xlongfeng <xlongfeng@126.com>
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -141,10 +142,106 @@ reset:
 	 * not when booting from ram!
 	 */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
-	bl	cpu_init_crit
-#endif
+/*
+ *************************************************************************
+ *
+ * CPU_init_critical registers
+ *
+ * setup important registers
+ * setup memory timing
+ *
+ *************************************************************************
+ */
+cpu_init_crit:
+	/*
+	 * flush v4 I/D caches
+	 */
+	mov	r0, #0
+	mcr	p15, 0, r0, c7, c7, 0	/* flush v3/v4 cache */
+	mcr	p15, 0, r0, c8, c7, 0	/* flush v4 TLB */
+
+	/*
+	 * disable MMU stuff and caches
+	 */
+	mrc	p15, 0, r0, c1, c0, 0
+	bic	r0, r0, #0x00002300	/* clear bits 13, 9:8 (--V- --RS) */
+	bic	r0, r0, #0x00000087	/* clear bits 7, 2:0 (B--- -CAM) */
+	orr	r0, r0, #0x00000002	/* set bit 2 (A) Align */
+	orr	r0, r0, #0x00001000	/* set bit 12 (I) I-Cache */
+	mcr	p15, 0, r0, c1, c0, 0
+
+	/*
+	 * Go setup Memory and board specific bits prior to relocation.
+	 */
+	bl	lowlevel_init	/* go setup pll,mux,memory */
+#endif /* CONFIG_SKIP_LOWLEVEL_INIT */
 
 #ifndef CONFIG_SKIP_RELOCATE_UBOOT
+#ifdef CONFIG_S3C2416
+	/* when we already run in ram, we don't need to relocate U-Boot.
+	 * and actually, memory controller must be configured before U-Boot
+	 * is running in ram.
+	 */
+relocate_uboot_to_ram:
+	ldr	r0, =0xff000fff
+	bic	r1, pc, r0		/* r0 <- current base addr of code */
+	ldr	r2, _TEXT_BASE		/* r1 <- original base addr in ram */
+	bic	r2, r2, r0		/* r0 <- current base addr of code */
+	cmp	r1, r2                  /* compare r0, r1                  */
+	beq	stack_setup		/* r0 == r1 then skip flash copy   */
+
+	/* get ready to call C functions */
+	ldr	sp, _TEXT_BASE		/* setup temp stack pointer */
+	sub	sp, sp, #12
+	mov	fp, #0			/* no previous frame, so fp=0 */
+
+	bl	nand_bl2_copy
+	tst 	r0, #0x0
+	bne	copy_failed
+
+	/* Confirm Booting Status NAND Booting or iROM NAND*/
+	ldr	r6, =0x40008000
+	ldr	r7, =0x24564236
+	swp	r8, r7, [r6]
+	swp	r5, r8, [r6]
+	cmp	r7, r5
+
+	/* If compare value is same between r7 and r5, Booting Device is iROM */
+	beq	444f
+
+	mov	r0, #0			/* NAND Booting */
+	b	555f
+444:
+	mov	r0, #0x40000000		/* iROM booting */
+
+555:
+	mov	r9, #0x1000
+	ldr	r1, _TEXT_BASE
+1:	ldr	r3, [r0], #4
+	ldr	r4, [r1], #4
+	teq	r3, r4
+	bne	compare_failed		/* not matched */
+	subs	r9, r9, #4
+	bne	1b
+
+	b	stack_setup
+
+copy_failed:
+	nop				/* copy from nand failed */
+	mov	r0, #0x45
+	bl uart_asm_putc
+	mov	r0, #0x30
+	bl uart_asm_putc
+	b	copy_failed
+
+compare_failed:
+	nop				/* compare failed */
+	mov	r0, #0x45
+	bl uart_asm_putc
+	mov	r0, #0x31
+	bl uart_asm_putc
+	b	compare_failed
+#else
 relocate:				/* relocate U-Boot to RAM	    */
 	adr	r0, _start		/* r0 <- current position of code   */
 	ldr	r1, _TEXT_BASE		/* test if we run from flash or RAM */
@@ -161,6 +258,7 @@ copy_loop:
 	stmia	r1!, {r3-r10}		/* copy to   target address [r1]    */
 	cmp	r0, r2			/* until source end addreee [r2]    */
 	ble	copy_loop
+#endif
 #endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
 
 	/* Set up the stack						    */
@@ -192,43 +290,6 @@ _start_armboot:
 	.word start_armboot
 
 
-/*
- *************************************************************************
- *
- * CPU_init_critical registers
- *
- * setup important registers
- * setup memory timing
- *
- *************************************************************************
- */
-#ifndef CONFIG_SKIP_LOWLEVEL_INIT
-cpu_init_crit:
-	/*
-	 * flush v4 I/D caches
-	 */
-	mov	r0, #0
-	mcr	p15, 0, r0, c7, c7, 0	/* flush v3/v4 cache */
-	mcr	p15, 0, r0, c8, c7, 0	/* flush v4 TLB */
-
-	/*
-	 * disable MMU stuff and caches
-	 */
-	mrc	p15, 0, r0, c1, c0, 0
-	bic	r0, r0, #0x00002300	/* clear bits 13, 9:8 (--V- --RS) */
-	bic	r0, r0, #0x00000087	/* clear bits 7, 2:0 (B--- -CAM) */
-	orr	r0, r0, #0x00000002	/* set bit 2 (A) Align */
-	orr	r0, r0, #0x00001000	/* set bit 12 (I) I-Cache */
-	mcr	p15, 0, r0, c1, c0, 0
-
-	/*
-	 * Go setup Memory and board specific bits prior to relocation.
-	 */
-	mov	ip, lr		/* perserve link reg across call */
-	bl	lowlevel_init	/* go setup pll,mux,memory */
-	mov	lr, ip		/* restore link */
-	mov	pc, lr		/* back to my caller */
-#endif /* CONFIG_SKIP_LOWLEVEL_INIT */
 
 /*
  *************************************************************************
