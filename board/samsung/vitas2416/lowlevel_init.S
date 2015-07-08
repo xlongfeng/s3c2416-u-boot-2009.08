@@ -63,10 +63,10 @@ lowlevel_init:
 	ldr	r1, =0x5451100
 	str	r1, [r0, #0x118]
 
-	/* Set system wide power off (GPA15), GPA16 output, */
+	/* Set GPA16 output, */
 	ldr	r0, =ELFIN_GPIO_BASE
 	ldr	r2, [r0, #GPACON_OFFSET]
-	ldr	r1, =0x1019000
+	ldr	r1, =0x1011000
 	bic	r2, r1
 	str	r2, [r0, #GPACON_OFFSET]
 	ldr	r2, [r0, #GPADAT_OFFSET]
@@ -111,10 +111,12 @@ lowlevel_init:
 	ldr	r2, =0x00
 	str	r2, [r0, #GPEDAT_OFFSET]
 	/* Set GPF port */
-	/* Set GPG port */
+	/* Set GPG port, Set system wide power off (GPG5) for ARM21_1511 */
 	ldr	r0, =ELFIN_GPIO_BASE
-	ldr	r2, =0x00
+	ldr	r2, =0x400
 	str	r2, [r0, #GPGCON_OFFSET]
+	ldr	r2, =0x0000
+	str	r2, [r0, #GPGDAT_OFFSET]
 	ldr	r2, =0x08
 	str	r2, [r0, #GPGPU_OFFSET]
 
@@ -169,7 +171,7 @@ lowlevel_init:
 
 	/* set ddr2 power on */
 	ldr	r0, =ELFIN_GPIO_BASE
-	ldr	r2, =0x0000
+	ldr	r2, =0x0400
 	str	r2, [r0, #GPGCON_OFFSET]
 	str	r2, [r0, #GPGDAT_OFFSET]
 	ldr 	r2, =0x0008
@@ -349,11 +351,11 @@ power_on_detect_asm:
 	ldr     r2, =0xDEE9
 	cmp     r2, r1
 	/* set ddr2 power on */
-	ldreq 	r1, =0x0000
+	ldreq 	r1, =0x0400
 	ldreq 	r2, =0x0000
 	ldreq 	r3, =0x0008
 	/* set ddr2 power off */
-	ldrne 	r1, =0x0000
+	ldrne 	r1, =0x0400
 	ldrne 	r2, =0x0000
 	ldrne 	r3, =0x0008
 #endif
@@ -483,7 +485,7 @@ nand_asm_init:
 	str     r1, [r0]
 	/* EVT1 has modification in NAND */
 #if 1
-	ldr	r1, =0x19a8a
+	ldr	r1, =0x11a8a
 	str     r1, [r0, #GPADAT_OFFSET]
 #endif
 	ldr	r0, =ELFIN_NAND_BASE

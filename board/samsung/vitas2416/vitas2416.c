@@ -83,8 +83,11 @@ int board_init (void)
 	gpio->GPKDAT |= (0x01 << 15);
 
 	/* set externed chips power on */
-	gpio->GPACON &= ~(0x01 << 15);
-	gpio->GPADAT |= (0x01 << 15);
+	con = gpio->GPGCON;
+	con &= ~(0x03 << (5 * 2));
+	con |= (0x01 << (5 * 2));
+	gpio->GPGCON = con;
+	gpio->GPGDAT |= (0x01 << 5);
 
 	/* enable SN75LVDS84A */
 	gpio->GPACON &= ~(0x01 << 16);
@@ -118,8 +121,7 @@ int board_init (void)
 	gpio->GPHCON = con;
 	gpio->GPHDAT |= (0x01 << 13);
 
-
-	/* alarm LED all off (GPK7,8,9) */
+	/* alarm LED all on (GPK7,8,9) */
 	con = gpio->GPKCON;
 	con &= ~((0x03 << (7 * 2)) | (0x03 << (8 * 2)) | (0x03 << (9 * 2)));
 	con |= ((0x01 << (7 * 2)) | (0x01 << (8 * 2)) | (0x01 << (9 * 2)));

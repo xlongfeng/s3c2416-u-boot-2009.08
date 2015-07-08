@@ -36,6 +36,10 @@
 
 #define CONFIG_DISPLAY_CPUINFO
 
+#define CONFIG_CMDLINE_TAG	 1	/* enable passing of ATAGs	*/
+#define CONFIG_SETUP_MEMORY_TAGS 1
+#define CONFIG_INITRD_TAG	 1
+
 /* input clock of PLL */
 #define CONFIG_SYS_CLK_FREQ	12000000/* the VITAS2416 has 12MHz input clock */
 
@@ -110,7 +114,7 @@
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
 #define MTDIDS_DEFAULT		"nand0=nand0"
-#define MTDPARTS_DEFAULT	"mtdparts=nand0:512k(BOOT),3584k@512k(LINUX),32m(ROOTFS),16m(APP),4m(CONF),-(HOME)"
+#define MTDPARTS_DEFAULT	"mtdparts=nand0:4m(BOOT),76m(ROOTFS),40m(HOME)"
 #define CONFIG_RBTREE
 #define CONFIG_LZO
 
@@ -123,7 +127,7 @@
 /*#define CONFIG_BOOTFILE	"elinos-lart" */
 /*#define CONFIG_BOOTCOMMAND	"tftp; bootm" */
 
-#define	CONFIG_EXTRA_ENV_SETTINGS											\
+#define	CONFIG_EXTRA_ENV_SETTINGS				\
 	"mtdids=" MTDIDS_DEFAULT "\0"				\
 	"mtdparts=" MTDPARTS_DEFAULT "\0"			\
 	"partition=nand0,0\0"					\
@@ -142,7 +146,7 @@
 #define CONFIG_SYS_MEMTEST_START	0x30000000	/* memtest works on	*/
 #define CONFIG_SYS_MEMTEST_END	TEXT_BASE	/* 60 MB in DRAM	*/
 
-#define	CONFIG_SYS_LOAD_ADDR	0x30800000	/* default load address	*/
+#define	CONFIG_SYS_LOAD_ADDR	0x38000000	/* default load address	*/
 
 /* the PWM TImer 4 uses a counter of 15625 for 10 ms, so we need */
 /* it to wrap 100 times (total 1562500) to get 1 sec. */
@@ -196,6 +200,10 @@
  * NANDFLASH and environment organization
  */
 #define CONFIG_NAND_S3C2416
+// #define CONFIG_SYS_S3C_NAND_HWECC
+#define CONFIG_SYS_NAND_ECCSIZE		512
+#define CONFIG_SYS_NAND_ECCBYTES	4
+
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define CONFIG_SYS_NAND_BASE	0x4e000010
 

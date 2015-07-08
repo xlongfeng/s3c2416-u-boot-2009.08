@@ -440,8 +440,12 @@ etags:
 		etags -a -o $(obj)etags `find $(SUBDIRS) $(TAG_SUBDIRS) \
 						-name '*.[ch]' -print`
 cscope:
-		find $(SUBDIRS) $(TAG_SUBDIRS) -name '*.[ch]' -print \
+		find . -name '*.[chS]' -print \
 						> cscope.files
+		find . -name 'Makefile' -print \
+						>> cscope.files
+		find . -name 'config.mk' -print \
+						>> cscope.files
 		cscope -b -q -k
 
 SYSTEM_MAP = \
@@ -2997,6 +3001,9 @@ smdk2400_config	:	unconfig
 
 smdk2410_config	:	unconfig
 	@$(MKCONFIG) $(@:_config=) arm arm920t smdk2410 samsung s3c24x0
+
+vitas2416_config :	unconfig
+	@$(MKCONFIG) $(@:_config=) arm arm926ejs vitas2416 samsung s3c2416
 
 SX1_stdout_serial_config \
 SX1_config:		unconfig
