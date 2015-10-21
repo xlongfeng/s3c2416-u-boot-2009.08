@@ -118,19 +118,28 @@
 #define CONFIG_RBTREE
 #define CONFIG_LZO
 
-#define CONFIG_BOOTDELAY	3
-/*#define CONFIG_BOOTARGS	"root=ramfs devfs=mount console=ttySA0,9600" */
-/*#define CONFIG_ETHADDR	08:00:3e:26:0a:5b */
+#define CONFIG_BOOTDELAY	1
+#define CONFIG_BOOTARGS		"ubi.mtd=1 ubi.mtd=2 root=ubi0:rootfs rootfstype=ubifs devfs=mount " \
+				"console=ttySAC0 mtdparts=NAND:4m(BOOT),76m(ROOTFS),40m(HOME) panic=1"
+#define CONFIG_ETHADDR		08:00:3e:26:0a:5b
 #define CONFIG_NETMASK          255.255.255.0
 #define CONFIG_IPADDR		192.168.1.110
 #define CONFIG_SERVERIP		192.168.1.200
-/*#define CONFIG_BOOTFILE	"elinos-lart" */
-/*#define CONFIG_BOOTCOMMAND	"tftp; bootm" */
+#define CONFIG_BOOTFILE		"skynet/uImage"
+#define CONFIG_BOOTCOMMAND	"ubi part ROOTFS; ubifsmount rootfs; ubifsload 0x38000000 /boot/bootable_kernel; bootm"
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
 	"mtdids=" MTDIDS_DEFAULT "\0"				\
 	"mtdparts=" MTDPARTS_DEFAULT "\0"			\
 	"partition=nand0,0\0"					\
+	"upb=tftp skynet/u-boot.bin; "				\
+		"nand erase 0 0x60000; "			\
+		"nand write ${fileaddr} 0 0x60000\0"		\
+	"upr=tftp skynet/rootfs_image; "			\
+		"nand erase 0x400000 0x4c00000; "		\
+		"ubi part ROOTFS; ubi create rootfs; "		\
+		"ubi write ${fileaddr} rootfs ${filesize}\0"	\
+	"upd=nand erase 0x5000000 0x2800000;\0"			\
 	""
 
 /*
