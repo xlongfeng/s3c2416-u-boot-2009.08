@@ -113,8 +113,8 @@
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
-#define MTDIDS_DEFAULT		"nand0=nand0"
-#define MTDPARTS_DEFAULT	"mtdparts=nand0:4m(BOOT),100m(ROOTFS),16m(HOME)"
+#define MTDIDS_DEFAULT		"nand0=NAND"
+#define MTDPARTS_DEFAULT	"mtdparts=NAND:4m(BOOT),6m(KERNEL),100m(ROOTFS),10m(HOME)"
 #define CONFIG_RBTREE
 #define CONFIG_LZO
 
@@ -122,7 +122,9 @@
 #define CONFIG_AUTOBOOT_KEYED
 #define CONFIG_AUTOBOOT_STOP_STR	"\r"
 
-#define CONFIG_BOOTARGS		"ubi.mtd=1 ubi.mtd=2 root=ubi0:rootfs rootfstype=ubifs devfs=mount " \
+#define CONFIG_LOADADDR		0x38000000
+
+#define CONFIG_BOOTARGS		"ubi.mtd=1 ubi.mtd=2 ubi.mtd=3 root=ubi1:rootfs rootfstype=ubifs devfs=mount " \
 				"console=ttySAC0 " MTDPARTS_DEFAULT " panic=1" \
 
 #define CONFIG_ETHADDR		08:00:3e:26:0a:5b
@@ -130,7 +132,7 @@
 #define CONFIG_IPADDR		192.168.1.110
 #define CONFIG_SERVERIP		192.168.1.200
 #define CONFIG_BOOTFILE		"skynet/uImage"
-#define CONFIG_BOOTCOMMAND	"ubi part ROOTFS; ubifsmount rootfs; ubifsload 0x38000000 /boot/bootable_kernel; bootm"
+#define CONFIG_BOOTCOMMAND	"ubi part KERNEL; ubi read ${loadaddr} kernel; bootm"
 
 #define	CONFIG_EXTRA_ENV_SETTINGS				\
 	"mtdids=" MTDIDS_DEFAULT "\0"				\
@@ -139,11 +141,15 @@
 	"upb=tftp skynet/u-boot.bin; "				\
 		"nand erase 0 0x60000; "			\
 		"nand write ${fileaddr} 0 0x60000\0"		\
+	"upk=tftp skynet/uImage; "				\
+		"nand erase 0x400000 0x600000; "		\
+		"ubi part KERNEL; ubi create kernel; "		\
+		"ubi write ${fileaddr} kernel ${filesize}\0"	\
 	"upr=tftp skynet/rootfs_image; "			\
-		"nand erase 0x400000 0x6400000; "		\
+		"nand erase 0xa00000 0x6400000; "		\
 		"ubi part ROOTFS; ubi create rootfs; "		\
 		"ubi write ${fileaddr} rootfs ${filesize}\0"	\
-	"upd=nand erase 0x6800000 0x1000000;\0"			\
+	"upd=nand erase 0x6e00000 0xa00000;\0"			\
 	""
 
 /*
@@ -159,7 +165,7 @@
 #define CONFIG_SYS_MEMTEST_START	0x30000000	/* memtest works on	*/
 #define CONFIG_SYS_MEMTEST_END	TEXT_BASE	/* 60 MB in DRAM	*/
 
-#define	CONFIG_SYS_LOAD_ADDR	0x38000000	/* default load address	*/
+#define	CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR	/* default load address	*/
 
 /* the PWM TImer 4 uses a counter of 15625 for 10 ms, so we need */
 /* it to wrap 100 times (total 1562500) to get 1 sec. */
