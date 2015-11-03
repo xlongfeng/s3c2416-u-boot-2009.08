@@ -114,13 +114,17 @@
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
 #define MTDIDS_DEFAULT		"nand0=nand0"
-#define MTDPARTS_DEFAULT	"mtdparts=nand0:4m(BOOT),76m(ROOTFS),40m(HOME)"
+#define MTDPARTS_DEFAULT	"mtdparts=nand0:4m(BOOT),100m(ROOTFS),16m(HOME)"
 #define CONFIG_RBTREE
 #define CONFIG_LZO
 
 #define CONFIG_BOOTDELAY	1
+#define CONFIG_AUTOBOOT_KEYED
+#define CONFIG_AUTOBOOT_STOP_STR	"\r"
+
 #define CONFIG_BOOTARGS		"ubi.mtd=1 ubi.mtd=2 root=ubi0:rootfs rootfstype=ubifs devfs=mount " \
-				"console=ttySAC0 mtdparts=NAND:4m(BOOT),76m(ROOTFS),40m(HOME) panic=1"
+				"console=ttySAC0 " MTDPARTS_DEFAULT " panic=1" \
+
 #define CONFIG_ETHADDR		08:00:3e:26:0a:5b
 #define CONFIG_NETMASK          255.255.255.0
 #define CONFIG_IPADDR		192.168.1.110
@@ -136,10 +140,10 @@
 		"nand erase 0 0x60000; "			\
 		"nand write ${fileaddr} 0 0x60000\0"		\
 	"upr=tftp skynet/rootfs_image; "			\
-		"nand erase 0x400000 0x4c00000; "		\
+		"nand erase 0x400000 0x6400000; "		\
 		"ubi part ROOTFS; ubi create rootfs; "		\
 		"ubi write ${fileaddr} rootfs ${filesize}\0"	\
-	"upd=nand erase 0x5000000 0x2800000;\0"			\
+	"upd=nand erase 0x6800000 0x1000000;\0"			\
 	""
 
 /*
