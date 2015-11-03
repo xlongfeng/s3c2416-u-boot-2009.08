@@ -116,7 +116,7 @@
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
 #define MTDIDS_DEFAULT		"nand0=NAND"
-#define MTDPARTS_DEFAULT	"mtdparts=NAND:4m(BOOT),6m(KERNEL),100m(ROOTFS),10m(HOME)"
+#define MTDPARTS_DEFAULT	"mtdparts=NAND:4m(BOOT),6m(KERNEL),80m(ROOTFS),32m(HOME)"
 #define CONFIG_RBTREE
 #define CONFIG_LZO
 
@@ -148,10 +148,11 @@
 		"ubi part KERNEL; ubi create kernel; "		\
 		"ubi write ${fileaddr} kernel ${filesize}\0"	\
 	"upr=tftp skynet/rootfs_image; "			\
-		"nand erase 0xa00000 0x6400000; "		\
+		"nand erase 0xa00000 0x5000000; "		\
 		"ubi part ROOTFS; ubi create rootfs; "		\
 		"ubi write ${fileaddr} rootfs ${filesize}\0"	\
-	"upd=nand erase 0x6e00000 0xa00000;\0"			\
+	"upd=nand erase 0x5a00000 0x2000000; "			\
+		"ubi part HOME; ubi create home;\0"		\
 	""
 
 /*
