@@ -66,6 +66,39 @@ static inline void delay (unsigned long loops)
  * Miscellaneous platform dependent initialisations
  */
 
+void usb_init(void)
+{
+	/*  Downstream Port Select: Host Mode */
+	/* PHY power enable */
+	PWRCFG_REG |= (1 << 4);
+	/* USB device 2.0 must reset like bellow,
+	 * 1st phy reset and after at least 10us, func_reset & host reset
+	 * phy reset can reset bellow registers.
+	 */
+	/* PHY 2.0 S/W reset */
+	USB_RSTCON_REG = (0<<2)|(1<<1)|(0<<0);
+	delay(10000); /* phy reset must be asserted for at 10us */
+
+	/*Function 2.0, Host 1.1 S/W reset*/
+	USB_RSTCON_REG = (1<<2)|(0<<1)|(1<<0);
+	USB_RSTCON_REG = (0<<2)|(0<<1)|(0<<0);
+
+	/* 48Mhz,Oscillator,External X-tal,host */
+	USB_PHYCTRL_REG = (0<<3)|(1<<2)|(1<<1)|(1<<0);
+
+	/* 48Mhz clock on ,PHY2.0 analog block power on
+	 * XO block power on,XO block power in suspend mode,
+	 * PHY 2.0 Pll power on ,suspend signal for save mode disable
+	 */
+	USB_PHYPWR_REG = (1<<31)|(0<<4)|(0<<3)|(0<<2)|(0<<1)|(0<<0);
+
+	/* D+ pull up disable(VBUS detect), USB2.0 Function clock Disable,
+	 * USB1.1 HOST Enable, USB2.0 PHY test enable
+	 */
+	USB_CLKCON_REG = (0<<31)|(0<<2)|(1<<1)|(1<<0);
+	USB_CLKCON_REG = (1<<31)|(1<<4)|(0<<2)|(1<<1)|(1<<0);
+}
+
 int board_init (void)
 {
 	S3C24X0_CLOCK_POWER * const clk_power = S3C24X0_GetBase_CLOCK_POWER();
@@ -136,6 +169,8 @@ int board_init (void)
 	delay(1000000);
 	delay(1000000);
 	gpio->GPADAT |= (0x01 << 21);
+
+	usb_init();
 
 	/* arch number of Vitas2-Board */
 	gd->bd->bi_arch_number = MACH_TYPE_SMDK2416;
