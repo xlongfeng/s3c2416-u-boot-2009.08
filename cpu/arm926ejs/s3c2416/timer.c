@@ -23,12 +23,20 @@
 
 #include <common.h>
 #include <s3c2416.h>
+#include <div64.h>
 
 extern ulong get_PCLK(void);
 
 static int timer_load_val = 0;
 static ulong timestamp;
 static ulong lastdec;
+
+static inline unsigned long long tick_to_time(unsigned long long tick)
+{
+	tick *= 1000;
+	do_div(tick, CONFIG_SYS_HZ);
+	return tick;
+}
 
 /* macro to read the 16 bit timer */
 static inline ulong READ_TIMER(void)
@@ -69,7 +77,7 @@ void reset_timer(void)
 
 ulong get_timer(ulong base)
 {
-	return get_timer_masked() - base;
+	return tick_to_time(get_ticks()) - base;
 }
 
 void set_timer(ulong t)
@@ -128,7 +136,7 @@ void udelay_masked (unsigned long usec)
  */
 unsigned long long get_ticks(void)
 {
-	return get_timer(0);
+	return get_timer_masked();
 }
 
 /*
@@ -156,8 +164,8 @@ int timer_init(void)
 	if (timer_load_val == 0) {
 		/*
 		 * for 10 ms clock period @ PCLK with 4 bit divider = 1/2
-		 * (default) and prescaler = 16. Should be 10390
-		 * @33.25MHz and 15625 @ 50 MHz
+		 * (default) and prescaler = 16. Should be
+		 * 20625 @ 66 MHz
 		 */
 		timer_load_val = get_PCLK() / (2 * 16 * 100);
 	}

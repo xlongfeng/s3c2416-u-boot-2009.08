@@ -170,9 +170,9 @@
 
 #define	CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR	/* default load address	*/
 
-/* the PWM TImer 4 uses a counter of 15625 for 10 ms, so we need */
-/* it to wrap 100 times (total 1562500) to get 1 sec. */
-#define	CONFIG_SYS_HZ		1562500
+/* the PWM TImer 4 uses a counter of 20625 for 10 ms, so we need */
+/* it to wrap 100 times (total 2062500) to get 1 sec. */
+#define	CONFIG_SYS_HZ		2062500
 
 /* valid baudrates */
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
