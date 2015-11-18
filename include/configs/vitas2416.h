@@ -136,7 +136,8 @@
 #define CONFIG_BOOTFILE		"skynet/uImage"
 #define CONFIG_BOOTCOMMAND	"ubi part KERNEL; ubi read ${loadaddr} kernel; bootm"
 
-#define	CONFIG_EXTRA_ENV_SETTINGS				\
+#define CONFIG_EXTRA_ENV_SETTINGS				\
+	"verify=no\0"						\
 	"mtdids=" MTDIDS_DEFAULT "\0"				\
 	"mtdparts=" MTDPARTS_DEFAULT "\0"			\
 	"partition=nand0,0\0"					\
